@@ -1,0 +1,63 @@
+package pc.ejercicios4ii;
+
+import java.util.concurrent.Semaphore;
+
+class AccesoAlmacen {
+
+    //Supongo que el almacen inicialmente está vacio
+    private final int MAX_PIEZAS;
+    // TODO: Definir los semaforos necesarios
+    Semaphore mutexRobot, mutexAlmacen, mutexMaquina;
+    int numPiezas;
+
+    public AccesoAlmacen(int maxPiezas) {
+        MAX_PIEZAS = maxPiezas;
+        // TODO: Inicializar los semaforos necesarios
+        //Contabiliza las piezas del almacen
+        this.mutexRobot = new Semaphore(0);
+        this.mutexMaquina = new Semaphore(this.MAX_PIEZAS);
+        //Vigila la exclusión de acceso al almacen
+        this.mutexAlmacen = new Semaphore(1);
+        numPiezas = 0;
+    }
+
+    public void inicioDepositar(int llamada) throws InterruptedException {
+        // TODO: Implementar el preprotocolo
+        if(numPiezas == MAX_PIEZAS)
+            System.out.println("¡-------------- EL BUFER ESTÁ LLENO "+ llamada +" ---------------");
+        System.out.print("\nLA MAQUINA " + llamada + " QUIERE METER DONDE HAY " + numPiezas);
+        System.out.println(" PIEZAS Y SU SEMAFORO ESTÁ EN " + mutexMaquina.availablePermits());
+        this.mutexMaquina.acquire();
+        this.mutexAlmacen.acquire();
+        System.out.println("\nEL SEMAFORO DE LA MAQUINA" + llamada  + " ESTÁ AHORA EN "+mutexMaquina.availablePermits() );
+    }
+
+    public void finDepositar(int llamada) {
+        // TODO: Implementar el postprotocolo
+        this.mutexAlmacen.release();
+        this.mutexRobot.release();
+        System.out.println("LA MAQUINA " + llamada + " HA TERMINADO"  );
+        System.out.println("DEJANDO PASO A " + mutexRobot.availablePermits() + " ROBOTS"  );
+        numPiezas++;
+    }
+
+    public void inicioRecoger(int llamada) throws InterruptedException {
+        // TODO: Implementar el preprotocolo
+         if(numPiezas == 0)
+            System.out.println("¡-------------- EL BUFER ESTÁ VACIO "+ llamada +" ---------------");
+        System.out.print("\nEL ROBOT " + llamada + " QUIERE SACAR DONDE HAY " + numPiezas);
+        System.out.println(" PIEZAS Y SU SEMAFORO ESTÁ EN " + mutexRobot.availablePermits());
+        this.mutexRobot.acquire();
+        this.mutexAlmacen.acquire();
+        System.out.println("\nEL SEMAFORO DEL ROBOT " + llamada  + " ESTÁ AHORA EN "+mutexRobot.availablePermits() );
+    }
+
+    public void finRecoger(int llamada) {
+        // TODO: Implementar el postprotocolo
+        this.mutexAlmacen.release();
+        this.mutexMaquina.release();
+        System.out.println("EL ROBOT " + llamada + " HA TERMINADO"  );
+        System.out.println("DEJANDO PASO A " + mutexMaquina.availablePermits() + " MAQUINAS"  );
+        numPiezas--;
+    }
+}
